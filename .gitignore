@@ -1,0 +1,27 @@
+# ── Python / Backend ──────────────────────────────────────────
+riverwatch-backend/venv/
+riverwatch-backend/__pycache__/
+riverwatch-backend/*.pyc
+riverwatch-backend/*.pyo
+riverwatch-backend/*.db
+riverwatch-backend/*.sqlite3
+riverwatch-backend/.env
+riverwatch-backend/riverwatch.db
+
+# ── Node / Frontend ───────────────────────────────────────────
+riverwatch-dashboard/node_modules/
+riverwatch-dashboard/dist/
+riverwatch-dashboard/.env
+riverwatch-dashboard/.env.local
+riverwatch-dashboard/.env.production
+
+# ── OS / Editor ───────────────────────────────────────────────
+.DS_Store
+Thumbs.db
+.idea/
+.vscode/
+*.swp
+*.swo
+
+# ── Docker ────────────────────────────────────────────────────
+.env

@@ -1,0 +1,48 @@
+version: '3.8'
+
+# ─────────────────────────────────────────────────────────────
+# RiverWatch PRO — Docker Compose
+# Port: 9100
+#
+# Usage:
+#   docker compose up -d
+#   docker compose logs -f riverwatch-backend
+#
+# Bluetooth serial passthrough (Linux only):
+#   Uncomment the `devices` block below and set BT_PORT to
+#   match the device path on the host (e.g. /dev/rfcomm0).
+#   On macOS, run the backend natively (outside Docker) since
+#   Docker Desktop does not support BT/serial passthrough.
+# ─────────────────────────────────────────────────────────────
+
+services:
+  riverwatch-backend:
+    build:
+      context: ./riverwatch-backend
+      dockerfile: Dockerfile
+    container_name: riverwatch-backend
+    restart: unless-stopped
+    ports:
+      - "9100:9100"
+    environment:
+      FLASK_PORT: "9100"
+      BT_PORT: "${BT_PORT:-/dev/rfcomm0}"
+      BT_BAUD: "${BT_BAUD:-9600}"
+      DB_PATH: "/app/data/riverwatch.db"
+    volumes:
+      - riverwatch-data:/app/data
+    # ── Bluetooth device passthrough (Linux only) ──────────────
+    # Uncomment and adjust the path to your paired BT serial port.
+    # devices:
+    #   - "/dev/rfcomm0:/dev/rfcomm0"
+    # ──────────────────────────────────────────────────────────
+    healthcheck:
+      test: ["CMD", "python", "-c", "import urllib.request; urllib.request.urlopen('http://localhost:9100/api/status')"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 10s
+
+volumes:
+  riverwatch-data:
+    driver: local
