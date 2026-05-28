@@ -12,7 +12,6 @@ export function useSocket() {
 
   useEffect(() => {
     const socket = io(BACKEND_URL, {
-      transports: ['websocket', 'polling'],
       reconnectionAttempts: Infinity,
       reconnectionDelay: 2000,
     })
