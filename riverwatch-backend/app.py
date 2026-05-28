@@ -72,8 +72,11 @@ socketio = SocketIO(app, cors_allowed_origins='*', async_mode='eventlet')
 # ---------------------------------------------------------------------------
 BT_PORT = os.environ.get('BT_PORT', 'COM6')
 BT_BAUD = int(os.environ.get('BT_BAUD', '9600'))
+DISABLE_BT = os.environ.get('DISABLE_BT', 'false').lower() == 'true' or BT_PORT.upper() == 'NONE'
 
-bt_reader = BluetoothReader(port=BT_PORT, baud_rate=BT_BAUD)
+bt_reader = None
+if not DISABLE_BT:
+    bt_reader = BluetoothReader(port=BT_PORT, baud_rate=BT_BAUD)
 
 
 def on_new_reading(data: dict):
@@ -103,9 +106,9 @@ def on_new_reading(data: dict):
 def api_status():
     return jsonify({
         'status':       'ok',
-        'bt_connected': bt_reader.is_connected,
+        'bt_connected': bt_reader.is_connected if bt_reader else False,
         'device':       'RiverWatch_PRO',
-        'port':         BT_PORT,
+        'port':         BT_PORT if not DISABLE_BT else 'NONE',
     })
 
 
@@ -212,16 +215,20 @@ if __name__ == '__main__':
     database.init_db()
 
     # Register callback and start Bluetooth reader
-    bt_reader.register_callback(on_new_reading)
-    bt_reader.start()
+    if bt_reader:
+        bt_reader.register_callback(on_new_reading)
+        bt_reader.start()
 
     # Startup banner
     print()
     print('=' * 60)
     print('  RiverWatch PRO — Backend Server')
     print('=' * 60)
-    print(f'  Bluetooth Port : {BT_PORT}')
-    print(f'  Baud Rate      : {BT_BAUD}')
+    if bt_reader:
+        print(f'  Bluetooth Port : {BT_PORT}')
+        print(f'  Baud Rate      : {BT_BAUD}')
+    else:
+        print('  Bluetooth Port : DISABLED (Cloud Mode)')
     print(f'  API URL        : http://localhost:{FLASK_PORT}')
     print(f'  WebSocket URL  : ws://localhost:{FLASK_PORT}')
     print('=' * 60)
@@ -230,4 +237,5 @@ if __name__ == '__main__':
     try:
         socketio.run(app, host='0.0.0.0', port=FLASK_PORT, debug=False)
     finally:
-        bt_reader.stop()
+        if bt_reader:
+            bt_reader.stop()
