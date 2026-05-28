@@ -19,7 +19,7 @@
     "axios": "^1.16.1",
     "date-fns": "^4.3.0",
     "leaflet": "^1.9.4",
-    "react-leaflet": "^5.0.0",
+    "react-leaflet": "^4.2.1",
     "recharts": "^3.8.1",
     "socket.io-client": "^4.8.3"
   }
