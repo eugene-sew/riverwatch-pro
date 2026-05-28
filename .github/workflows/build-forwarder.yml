@@ -1,0 +1,59 @@
+name: Build Standalone Forwarders
+
+on:
+  push:
+    branches:
+      - main
+    paths:
+      - 'riverwatch-backend/bluetooth_reader.py'
+      - 'riverwatch-backend/build_forwarder.py'
+      - 'riverwatch-backend/requirements-forwarder.txt'
+      - '.github/workflows/build-forwarder.yml'
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build on ${{ matrix.os }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [windows-latest, macos-latest, ubuntu-latest]
+        include:
+          - os: windows-latest
+            artifact_name: RiverWatch-Forwarder-Windows
+            artifact_path: riverwatch-backend/dist/RiverWatch-Forwarder.exe
+          - os: macos-latest
+            artifact_name: RiverWatch-Forwarder-macOS
+            artifact_path: riverwatch-backend/dist/RiverWatch-Forwarder
+          - os: ubuntu-latest
+            artifact_name: RiverWatch-Forwarder-Linux
+            artifact_path: riverwatch-backend/dist/RiverWatch-Forwarder
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+          cache: 'pip'
+          cache-dependency-path: 'riverwatch-backend/requirements-forwarder.txt'
+
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r riverwatch-backend/requirements-forwarder.txt
+
+      - name: Build Executable
+        shell: bash
+        run: |
+          cd riverwatch-backend
+          python build_forwarder.py
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: ${{ matrix.artifact_name }}
+          path: ${{ matrix.artifact_path }}
+          if-no-files-found: error

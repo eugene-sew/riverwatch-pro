@@ -42,6 +42,7 @@ from flask import Flask, jsonify, request
 from flask_socketio import SocketIO
 from flask_cors import CORS
 from dotenv import load_dotenv
+from datetime import datetime, timezone
 
 import database
 from bluetooth_reader import BluetoothReader
@@ -106,6 +107,49 @@ def api_status():
         'device':       'RiverWatch_PRO',
         'port':         BT_PORT,
     })
+
+
+@app.route('/api/ingest', methods=['POST'])
+def api_ingest():
+    """Endpoint for local forwarder client to ingest ESP32 Bluetooth data."""
+    # Validate the shared secret key
+    client_key = request.headers.get('X-RiverWatch-Key')
+    expected_key = os.environ.get('INGEST_KEY', 'riverwatch-demo')
+    if not client_key or client_key != expected_key:
+        return jsonify({'error': 'Unauthorized'}), 401
+
+    try:
+        data = request.get_json(force=True)
+        if not data:
+            return jsonify({'error': 'Missing JSON body'}), 400
+
+        # Ensure server-side UTC timestamp is present
+        if 'timestamp' not in data:
+            now = datetime.now(timezone.utc)
+            data['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%S.') + f"{now.microsecond // 1000:03d}Z"
+
+        # 1. Persist to SQLite DB
+        database.insert_reading(data)
+
+        # 2. Emit reading event over WebSocket
+        socketio.emit('reading', data)
+
+        # 3. Emit alert event if level is not SAFE/standby
+        alert_level = data.get('alert', 'SAFE')
+        if alert_level not in ('SAFE', 'standby'):
+            socketio.emit('alert', {
+                'level':     alert_level,
+                'water':     data.get('water'),
+                'timestamp': data.get('timestamp'),
+                'lat':       data.get('lat'),
+                'lng':       data.get('lng'),
+            })
+
+        return jsonify({'ok': True}), 200
+
+    except Exception as e:
+        logger.error(f"Error ingesting reading: {e}", exc_info=True)
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/latest')

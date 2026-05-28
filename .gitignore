@@ -25,3 +25,10 @@ Thumbs.db
 
 # ── Docker ────────────────────────────────────────────────────
 .env
+
+# ── PyInstaller / Local Config ────────────────────────────────
+riverwatch-backend/build/
+riverwatch-backend/dist/
+riverwatch-backend/*.spec
+riverwatch-backend/config.json
+
