@@ -40,7 +40,13 @@ export function useHistory(connected) {
 
   useEffect(() => {
     fetchHistory()
-  }, [])
+  }, [fetchHistory])
+
+  // Periodically refresh the full historical dataset every 20 seconds to keep charts in sync
+  useEffect(() => {
+    const interval = setInterval(fetchHistory, 20000)
+    return () => clearInterval(interval)
+  }, [fetchHistory])
 
   // Poll /api/latest as fallback when WebSocket not connected
   useEffect(() => {
