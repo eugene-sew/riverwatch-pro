@@ -1,5 +1,5 @@
 import React from 'react'
-import { ShieldAlert } from '@phosphor-icons/react'
+import { ShieldWarning } from '@phosphor-icons/react'
 
 function riskColor(score) {
   if (score >= 75) return '#dc2626' // critical
@@ -46,7 +46,7 @@ export default function RiskGauge({ reading }) {
   return (
     <div className="panel" style={{ height: '100%' }}>
       <div className="panel-header">
-        <ShieldAlert weight="duotone" size={16} color="#00d4aa" />
+        <ShieldWarning weight="duotone" size={16} color="#00d4aa" />
         RISK MATRIX
       </div>
       <div className="panel-body risk-gauge-panel">

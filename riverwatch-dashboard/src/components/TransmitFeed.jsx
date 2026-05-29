@@ -1,5 +1,5 @@
 import React from 'react'
-import { Broadcast, CircuitBoard, DeviceMobile } from '@phosphor-icons/react'
+import { Broadcast, Cpu, DeviceMobile } from '@phosphor-icons/react'
 import { format } from 'date-fns'
 
 export default function TransmitFeed({ history = [] }) {
@@ -44,7 +44,7 @@ export default function TransmitFeed({ history = [] }) {
                 </span>
                 <span className="source-badge" style={{ marginRight: 8, display: 'inline-flex', alignItems: 'center', gap: '3px' }}>
                   {source === 'ESP32' ? (
-                    <CircuitBoard size={8} />
+                    <Cpu size={8} />
                   ) : (
                     <DeviceMobile size={8} />
                   )}

@@ -27,7 +27,25 @@ export function usePusherMobile({ onAlert, onSOSResolved }: PusherMobileProps = 
     }
 
     // Configure Pusher connection
-    const PusherConstructor = (Pusher as any).default || Pusher;
+    console.log('[Pusher Debug] Imported Pusher:', Pusher);
+    console.log('[Pusher Debug] Type of Pusher:', typeof Pusher);
+    console.log('[Pusher Debug] Pusher keys:', Object.keys(Pusher || {}));
+    if (Pusher && (Pusher as any).default) {
+      console.log('[Pusher Debug] Type of Pusher.default:', typeof (Pusher as any).default);
+    }
+
+    let PusherConstructor: any = null;
+    if (typeof Pusher === 'function') {
+      PusherConstructor = Pusher;
+    } else if (Pusher && typeof (Pusher as any).default === 'function') {
+      PusherConstructor = (Pusher as any).default;
+    } else if (Pusher && typeof (Pusher as any).Pusher === 'function') {
+      PusherConstructor = (Pusher as any).Pusher;
+    } else {
+      console.error('[Pusher Debug] No valid Pusher constructor found!');
+      PusherConstructor = Pusher; // Fallback
+    }
+
     const pusher = new PusherConstructor(PUSHER_KEY, {
       cluster: PUSHER_CLUSTER,
       forceTLS: true,

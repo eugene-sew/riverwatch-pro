@@ -441,7 +441,8 @@ html, body {
 .gauge-bar-fill {
   position: absolute;
   bottom: 0;
-  left: 0, right: 0;
+  left: 0;
+  right: 0;
   border-radius: 5px;
   transition: height 1s ease, background 0.5s ease;
 }

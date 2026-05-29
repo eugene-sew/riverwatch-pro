@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react'
 import {
   MapPin, NavigationArrow, BluetoothConnected, BluetoothX,
-  DeviceMobile, CircuitBoard, Warning
+  DeviceMobile, Cpu, Warning
 } from '@phosphor-icons/react'
 
 function alertClass(level) {
@@ -69,7 +69,7 @@ export default function TopBar({ reading, connected, isStale }) {
         </span>
         <span className="topbar-item">
           {source === 'ESP32'
-            ? <CircuitBoard weight="duotone" size={14} />
+            ? <Cpu weight="duotone" size={14} />
             : <DeviceMobile weight="duotone" size={14} />}
           {source}
         </span>
