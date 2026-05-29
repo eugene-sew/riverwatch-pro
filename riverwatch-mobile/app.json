@@ -1,0 +1,59 @@
+{
+  "expo": {
+    "name": "RiverWatch PRO",
+    "slug": "riverwatch-mobile",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "icon": "./assets/icon.png",
+    "userInterfaceStyle": "dark",
+    "splash": {
+      "backgroundColor": "#0a0f1e"
+    },
+    "ios": {
+      "supportsTablet": true,
+      "bundleIdentifier": "com.edzoleme.riverwatchpro",
+      "infoPlist": {
+        "NSLocationAlwaysAndWhenInUseUsageDescription": "RiverWatch needs location to include GPS coordinates in flood alerts.",
+        "NSLocationWhenInUseUsageDescription": "RiverWatch needs location to include GPS coordinates in flood alerts.",
+        "UIBackgroundModes": ["fetch", "location"]
+      }
+    },
+    "android": {
+      "adaptiveIcon": {
+        "foregroundImage": "./assets/adaptive-icon.png",
+        "backgroundColor": "#0a0f1e"
+      },
+      "package": "com.edzoleme.riverwatchpro",
+      "permissions": [
+        "ACCESS_FINE_LOCATION",
+        "ACCESS_COARSE_LOCATION",
+        "ACCESS_BACKGROUND_LOCATION",
+        "RECEIVE_BOOT_COMPLETED",
+        "WAKE_LOCK"
+      ]
+    },
+    "web": {
+      "bundler": "metro",
+      "output": "static",
+      "favicon": "./assets/favicon.png"
+    },
+    "plugins": [
+      "expo-router",
+      "expo-secure-store",
+      [
+        "expo-location",
+        {
+          "locationAlwaysAndWhenInUsePermission": "RiverWatch needs location to include GPS coordinates in flood alerts."
+        }
+      ],
+      [
+        "expo-background-fetch",
+        {}
+      ]
+    ],
+    "experiments": {
+      "typedRoutes": true
+    },
+    "scheme": "riverwatchpro"
+  }
+}

@@ -56,6 +56,100 @@ def init_db():
         logger.info("Database initialized.")
     finally:
         conn.close()
+    # Ensure SOS table exists (uses its own connection)
+    init_sos_table()
+
+
+def init_sos_table():
+    """Create sos_events table if it does not exist."""
+    conn = _get_conn()
+    try:
+        c = conn.cursor()
+        c.execute('''
+            CREATE TABLE IF NOT EXISTS sos_events (
+                id         INTEGER PRIMARY KEY AUTOINCREMENT,
+                timestamp  TEXT NOT NULL,
+                lat        REAL,
+                lng        REAL,
+                accuracy   REAL,
+                device_id  TEXT,
+                water      REAL,
+                alert      TEXT,
+                message    TEXT,
+                resolved   INTEGER DEFAULT 0
+            )
+        ''')
+        conn.commit()
+        logger.info("SOS events table initialized.")
+    finally:
+        conn.close()
+
+
+def insert_sos(data: dict) -> int:
+    """Insert an SOS event. Returns the new row id."""
+    conn = _get_conn()
+    try:
+        c = conn.cursor()
+        c.execute('''
+            INSERT INTO sos_events
+                (timestamp, lat, lng, accuracy, device_id, water, alert, message)
+            VALUES
+                (:timestamp, :lat, :lng, :accuracy, :device_id, :water, :alert, :message)
+        ''', {
+            'timestamp': data.get('timestamp'),
+            'lat':       data.get('lat'),
+            'lng':       data.get('lng'),
+            'accuracy':  data.get('accuracy'),
+            'device_id': data.get('deviceId'),
+            'water':     data.get('water'),
+            'alert':     data.get('alert'),
+            'message':   data.get('message', ''),
+        })
+        conn.commit()
+        return c.lastrowid
+    except Exception as e:
+        logger.error(f"insert_sos error: {e}")
+        conn.rollback()
+        return -1
+    finally:
+        conn.close()
+
+
+def get_sos_events(limit: int = 20, unresolved_only: bool = False) -> list:
+    """Return SOS events as list of dicts."""
+    conn = _get_conn()
+    try:
+        c = conn.cursor()
+        if unresolved_only:
+            c.execute(
+                'SELECT * FROM sos_events WHERE resolved=0 ORDER BY id DESC LIMIT ?',
+                (limit,)
+            )
+        else:
+            c.execute(
+                'SELECT * FROM sos_events ORDER BY id DESC LIMIT ?',
+                (limit,)
+            )
+        rows = c.fetchall()
+        return [_row_to_dict(r) for r in rows]
+    finally:
+        conn.close()
+
+
+def resolve_sos(sos_id: int) -> bool:
+    """Mark an SOS event as resolved. Returns True on success."""
+    conn = _get_conn()
+    try:
+        c = conn.cursor()
+        c.execute('UPDATE sos_events SET resolved=1 WHERE id=?', (sos_id,))
+        conn.commit()
+        return c.rowcount > 0
+    except Exception as e:
+        logger.error(f"resolve_sos error: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
 
 
 def insert_reading(data: dict):

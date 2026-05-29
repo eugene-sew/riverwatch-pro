@@ -32,3 +32,9 @@ riverwatch-backend/dist/
 riverwatch-backend/*.spec
 riverwatch-backend/config.json
 
+# ── Mobile App ───────────────────────────────────────────────
+riverwatch-mobile/node_modules/
+riverwatch-mobile/.env
+riverwatch-mobile/.expo/
+
+

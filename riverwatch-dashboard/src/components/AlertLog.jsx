@@ -1,75 +1,67 @@
 import React from 'react'
-import { getAlertStyle } from '../utils/alertColors'
+import { Warning, Siren, CheckCircle, ShieldCheck } from '@phosphor-icons/react'
 import { format } from 'date-fns'
 
-export default function AlertLog({ alerts }) {
-  if (!alerts || alerts.length === 0) {
-    return (
-      <div className="card" style={{ display: 'flex', flexDirection: 'column', minHeight: '320px' }}>
-        <div className="card-title">🚨 Alert Log</div>
-        <div style={{
-          flex: 1,
-          display: 'flex',
-          alignItems: 'center',
-          justifyContent: 'center',
-          color: '#475569',
-          fontSize: '14px',
-        }}>No alerts recorded.</div>
-      </div>
-    )
-  }
+function alertClass(level) {
+  const l = (level || 'SAFE').toUpperCase()
+  if (l === 'CRITICAL') return 'alert-critical'
+  if (l === 'DANGER')   return 'alert-danger'
+  if (l === 'WARNING')  return 'alert-warning'
+  if (l === 'WATCH')    return 'alert-watch'
+  return 'alert-safe'
+}
 
+function AlertIcon({ level }) {
+  const l = (level || '').toUpperCase()
+  if (l === 'CRITICAL' || l === 'DANGER') return <Siren weight="duotone" size={14} color="#ef4444" />
+  if (l === 'WARNING' || l === 'WATCH')   return <Warning weight="duotone" size={14} color="#f97316" />
+  return <CheckCircle weight="duotone" size={14} color="#00d4aa" />
+}
+
+export default function AlertLog({ alerts = [] }) {
   return (
-    <div className="card" style={{ display: 'flex', flexDirection: 'column' }}>
-      <div className="card-title">🚨 Alert Log</div>
-      <div style={{
-        overflowY: 'auto',
-        maxHeight: '280px',
-        display: 'flex',
-        flexDirection: 'column',
-        gap: '6px',
-      }}>
-        {alerts.map((alert, i) => {
-          const style = getAlertStyle(alert.level)
-          const ts = alert.timestamp ? format(new Date(alert.timestamp), 'HH:mm:ss') : '--'
-          const hasCoords = alert.lat && alert.lng && alert.lat !== 0 && alert.lng !== 0
-          return (
-            <div
-              key={alert.id || i}
-              style={{
-                background: style.bgLight,
-                border: `1px solid ${style.border}`,
-                borderRadius: '6px',
-                padding: '8px 12px',
-                fontSize: '12px',
-                display: 'flex',
-                flexDirection: 'column',
-                gap: '3px',
-              }}
-            >
-              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
-                <span style={{
-                  background: style.border,
-                  color: '#fff',
-                  padding: '2px 8px',
-                  borderRadius: '4px',
-                  fontSize: '10px',
-                  fontWeight: 700,
-                  letterSpacing: '1px',
-                }}>{alert.level}</span>
-                <span style={{ color: '#64748b', fontFamily: 'Courier New, monospace' }}>{ts}</span>
+    <div className="panel alert-log-panel" style={{ height: '100%' }}>
+      <div className="panel-header">
+        <Warning weight="duotone" size={14} color="#00d4aa" />
+        SYSTEM ALERT LOG
+      </div>
+      <div style={{ flex: 1, overflowY: 'auto' }}>
+        {(!alerts || alerts.length === 0) ? (
+          <div style={{
+            display: 'flex',
+            flexDirection: 'column',
+            alignItems: 'center',
+            justifyContent: 'center',
+            height: '100%',
+            gap: 8,
+            color: 'var(--text-muted)',
+            fontFamily: 'var(--font-mono)',
+            fontSize: 11,
+            padding: '24px 0',
+          }}>
+            <ShieldCheck weight="duotone" size={28} color="#00d4aa" />
+            No alerts recorded
+          </div>
+        ) : (
+          alerts.map((a, i) => {
+            const ts = a.timestamp ? format(new Date(a.timestamp), 'HH:mm:ss') : '--'
+            const lvl = a.level || a.alert || 'WATCH'
+            return (
+              <div key={`${a.timestamp}-${i}`} className="log-row">
+                <AlertIcon level={lvl} />
+                <span style={{ color: 'var(--text-secondary)', width: '60px', flexShrink: 0 }}>
+                  [{ts}]
+                </span>
+                <span className={`level-badge ${alertClass(lvl)}`} style={{ marginRight: 8 }}>
+                  {lvl}
+                </span>
+                <span style={{ color: 'var(--text-primary)', flex: 1 }}>
+                  {a.message || `Water reading at ${a.water?.toFixed(0) || '--'} cm`}
+                </span>
               </div>
-              <div style={{ color: '#94a3b8', fontFamily: 'Courier New, monospace' }}>
-                💧 {alert.water ?? '--'} cm
-                {hasCoords && (
-                  <span style={{ marginLeft: '8px', color: '#475569' }}>
-                    📍 {alert.lat.toFixed(4)}, {alert.lng.toFixed(4)}
-                  </span>
-                )}
-              </div>
-            </div>
-          )
-        })}
+            )
+          })
+        )}
       </div>
     </div>
   )
