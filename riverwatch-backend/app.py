@@ -230,7 +230,7 @@ def api_stats():
 
 @app.route('/api/sos', methods=['POST'])
 def api_sos_post():
-    """Receive an SOS emergency event from a mobile device."""
+    """Receive an SOS emergency event from a mobile device or update an ongoing one."""
     client_key = request.headers.get('X-RiverWatch-Key') or request.headers.get('X-API-Key')
     expected_key = os.environ.get('INGEST_KEY', 'riverwatch-demo')
     if not client_key or client_key != expected_key:
@@ -246,10 +246,25 @@ def api_sos_post():
             now = datetime.now(timezone.utc)
             data['timestamp'] = now.strftime('%Y-%m-%dT%H:%M:%S.') + f"{now.microsecond // 1000:03d}Z"
 
-        # Insert into database
-        sos_id = database.insert_sos(data)
-        if sos_id == -1:
-            return jsonify({'error': 'Database insert failed'}), 500
+        # Check if this is an update to an existing SOS
+        sos_id = data.get('id')
+        is_update = False
+        if sos_id:
+            # Try to update coordinates on existing SOS
+            success = database.update_sos_coords(
+                sos_id=int(sos_id),
+                lat=data.get('lat', 0),
+                lng=data.get('lng', 0),
+                accuracy=data.get('accuracy', 0),
+                message=data.get('message', '')
+            )
+            is_update = success
+
+        if not is_update:
+            # Insert a new SOS event
+            sos_id = database.insert_sos(data)
+            if sos_id == -1:
+                return jsonify({'error': 'Database insert failed'}), 500
 
         # Build SOS payload
         sos_payload = {
@@ -263,6 +278,7 @@ def api_sos_post():
             'water':     data.get('water', 0),
             'alert':     data.get('alert', 'UNKNOWN'),
             'message':   data.get('message', ''),
+            'isUpdate':  is_update
         }
 
         # Emit over SocketIO
@@ -271,9 +287,9 @@ def api_sos_post():
         # Trigger Pusher
         _trigger_pusher('riverwatch', 'sos', sos_payload)
 
-        logger.info(f"SOS received: id={sos_id} device={data.get('deviceId')} lat={data.get('lat')} lng={data.get('lng')}")
+        logger.info(f"SOS received ({'update' if is_update else 'new'}): id={sos_id} device={data.get('deviceId')} lat={data.get('lat')} lng={data.get('lng')}")
 
-        return jsonify({'ok': True, 'sosId': sos_id}), 200
+        return jsonify({'ok': True, 'sosId': sos_id, 'isUpdate': is_update}), 200
 
     except Exception as e:
         logger.error(f"Error processing SOS: {e}", exc_info=True)

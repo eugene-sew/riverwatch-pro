@@ -177,6 +177,7 @@ export function useSOS() {
           'X-RiverWatch-Key': apiKey,
         },
         body: JSON.stringify({
+          id: sosId,
           lat: c.lat,
           lng: c.lng,
           accuracy: c.accuracy,

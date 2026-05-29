@@ -5,13 +5,15 @@ import { format } from 'date-fns'
 const DEFAULT_CENTER = [5.6, 0.2]
 const DEFAULT_ZOOM = 13
 
-function RecenterMap({ lat, lng }) {
+function RecenterMap({ lat, lng, activeSOS }) {
   const map = useMap()
   React.useEffect(() => {
-    if (lat && lng) {
+    if (activeSOS && activeSOS.lat && activeSOS.lng) {
+      map.setView([activeSOS.lat, activeSOS.lng], DEFAULT_ZOOM)
+    } else if (lat && lng) {
       map.setView([lat, lng], DEFAULT_ZOOM)
     }
-  }, [lat, lng, map])
+  }, [lat, lng, activeSOS?.lat, activeSOS?.lng, map])
   return null
 }
 
@@ -32,7 +34,11 @@ export default function MapView({ reading, sosEvents = [], onResolveSOS }) {
   const color = alertColor(reading?.alert)
   const ts = reading?.timestamp ? format(new Date(reading.timestamp), 'HH:mm:ss') : '--'
 
-  const center = hasFix ? [lat, lng] : DEFAULT_CENTER
+  const activeSOS = sosEvents.find((e) => !e.resolved)
+
+  const center = activeSOS && activeSOS.lat && activeSOS.lng
+    ? [activeSOS.lat, activeSOS.lng]
+    : (hasFix ? [lat, lng] : DEFAULT_CENTER)
 
   return (
     <div className="panel map-panel" style={{ height: '100%', minHeight: 0 }}>
@@ -41,24 +47,37 @@ export default function MapView({ reading, sosEvents = [], onResolveSOS }) {
         {!hasFix && (
           <div style={{
             position: 'absolute',
-            inset: 0,
+            top: '12px',
+            left: '12px',
             zIndex: 1000,
-            display: 'flex',
-            alignItems: 'center',
-            justifyContent: 'center',
-            background: 'rgba(6, 13, 26, 0.7)',
-            backdropFilter: 'blur(2px)',
             pointerEvents: 'none',
           }}>
             <div style={{
-              background: '#0a1628',
-              border: '1px solid #1a3050',
-              padding: '12px 20px',
-              borderRadius: '8px',
-              fontSize: '11px',
+              background: 'rgba(10, 22, 40, 0.9)',
+              border: '1px solid rgba(239, 68, 68, 0.3)',
+              padding: '6px 12px',
+              borderRadius: '4px',
+              fontSize: '9px',
               fontFamily: 'var(--font-mono)',
-              color: 'var(--text-secondary)',
-            }}>📡 WAITING FOR STATION GPS SYNC...</div>
+              color: '#ef4444',
+              fontWeight: 'bold',
+              boxShadow: '0 4px 12px rgba(0,0,0,0.5)',
+              display: 'flex',
+              alignItems: 'center',
+              gap: '6px',
+              backdropFilter: 'blur(4px)'
+            }}>
+              <span style={{
+                display: 'inline-block',
+                width: '6px',
+                height: '6px',
+                borderRadius: '50%',
+                background: '#ef4444',
+                boxShadow: '0 0 6px #ef4444',
+                animation: 'pulseDot 2s ease-in-out infinite'
+              }} />
+              STATION GPS AWAITING SYNC...
+            </div>
           </div>
         )}
 
@@ -73,10 +92,10 @@ export default function MapView({ reading, sosEvents = [], onResolveSOS }) {
             attribution='&copy; <a href="https://carto.com/">CARTO</a>'
           />
 
+          <RecenterMap lat={hasFix ? lat : null} lng={hasFix ? lng : null} activeSOS={activeSOS} />
+
           {hasFix && (
             <>
-              <RecenterMap lat={lat} lng={lng} />
-
               {/* 500m Dashed Coverage Boundary */}
               <Circle
                 center={[lat, lng]}

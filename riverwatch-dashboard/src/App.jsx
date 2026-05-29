@@ -49,11 +49,6 @@ export default function App() {
       .then((res) => {
         const events = res.data.events || []
         setSosEvents(events)
-        // Auto-show active unresolved SOS if present
-        const unresolved = events.find((e) => !e.resolved)
-        if (unresolved) {
-          setActiveSOSEvent(unresolved)
-        }
       })
       .catch((e) => console.error('[REST] SOS load failed:', e))
   }, [])
@@ -65,28 +60,36 @@ export default function App() {
       setPusherReading(data)
     },
     onSOS: (data) => {
-      // Add to list if not exists
+      const isExisting = sosEvents.some((e) => e.id === data.id) || !!data.isUpdate
+
       setSosEvents((prev) => {
-        if (prev.some((e) => e.id === data.id)) return prev
+        if (prev.some((e) => e.id === data.id)) {
+          return prev.map((e) => (e.id === data.id ? { ...e, ...data } : e))
+        }
         return [data, ...prev]
       })
-      // Sound alert synthesis
-      playSOSAlert()
-      // Open Emergency Modal
+
+      // Open or update Emergency Modal
       setActiveSOSEvent(data)
-      // Custom Hot Toast alert
-      toast.error(`🚨 EMERGENCY SOS BROADCAST FROM ${data.deviceId || 'NODE'}!`, {
-        duration: 8000,
-        position: 'top-right',
-        style: {
-          background: '#7f1d1d',
-          color: '#fca5a5',
-          border: '2px solid #ef4444',
-          fontFamily: 'var(--font-mono)',
-          fontWeight: 'bold',
-          fontSize: '11px',
-        }
-      })
+
+      // Only trigger sound/toast notifications if this is a BRAND-NEW SOS trigger!
+      if (!isExisting) {
+        // Sound alert synthesis
+        playSOSAlert()
+        // Custom Hot Toast alert
+        toast.error(`🚨 EMERGENCY SOS BROADCAST FROM ${data.deviceId || 'NODE'}!`, {
+          duration: 8000,
+          position: 'top-right',
+          style: {
+            background: '#7f1d1d',
+            color: '#fca5a5',
+            border: '2px solid #ef4444',
+            fontFamily: 'var(--font-mono)',
+            fontWeight: 'bold',
+            fontSize: '11px',
+          }
+        })
+      }
     },
     onAlert: (data) => {
       playAlertTone()

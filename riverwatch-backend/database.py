@@ -136,6 +136,26 @@ def get_sos_events(limit: int = 20, unresolved_only: bool = False) -> list:
         conn.close()
 
 
+def update_sos_coords(sos_id: int, lat: float, lng: float, accuracy: float, message: str) -> bool:
+    """Update coordinates and message of an existing SOS event. Returns True on success."""
+    conn = _get_conn()
+    try:
+        c = conn.cursor()
+        c.execute('''
+            UPDATE sos_events
+            SET lat=?, lng=?, accuracy=?, message=?
+            WHERE id=?
+        ''', (lat, lng, accuracy, message, sos_id))
+        conn.commit()
+        return c.rowcount > 0
+    except Exception as e:
+        logger.error(f"update_sos_coords error: {e}")
+        conn.rollback()
+        return False
+    finally:
+        conn.close()
+
+
 def resolve_sos(sos_id: int) -> bool:
     """Mark an SOS event as resolved. Returns True on success."""
     conn = _get_conn()
