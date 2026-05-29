@@ -1,6 +1,6 @@
 import React from 'react'
 import { Broadcast, Cpu, DeviceMobile } from '@phosphor-icons/react'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 
 export default function TransmitFeed({ history = [] }) {
   // Take last 8 readings
@@ -30,7 +30,7 @@ export default function TransmitFeed({ history = [] }) {
         ) : (
           transmissions.map((t, idx) => {
             const isLatest = idx === 0
-            const ts = t.timestamp ? format(new Date(t.timestamp), 'HH:mm:ss') : '--'
+            const ts = safeFormatDate(t.timestamp, 'HH:mm:ss')
             const source = t.source || (t.bt_paired || t.btPaired ? 'ESP32' : 'MOBILE')
             const water = t.water !== undefined ? `${t.water.toFixed(0)}cm` : '0cm'
             const risk = t.risk !== undefined ? `R:${t.risk}` : 'R:0'

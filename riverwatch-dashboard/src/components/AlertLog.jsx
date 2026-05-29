@@ -1,6 +1,6 @@
 import React from 'react'
 import { Warning, Siren, CheckCircle, ShieldCheck } from '@phosphor-icons/react'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 
 function alertClass(level) {
   const l = (level || 'SAFE').toUpperCase()
@@ -44,7 +44,7 @@ export default function AlertLog({ alerts = [] }) {
           </div>
         ) : (
           alerts.map((a, i) => {
-            const ts = a.timestamp ? format(new Date(a.timestamp), 'HH:mm:ss') : '--'
+            const ts = safeFormatDate(a.timestamp, 'HH:mm:ss')
             const lvl = a.level || a.alert || 'WATCH'
             return (
               <div key={`${a.timestamp}-${i}`} className="log-row">

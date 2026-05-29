@@ -1,5 +1,5 @@
 import React from 'react'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 
 function gpsStatusText(status) {
   if (status === 2) return null // will show sats instead
@@ -11,7 +11,7 @@ function gpsStatusText(status) {
 export default function StatusBar({ connected, reading, readingCount }) {
   const gpsStatus = reading?.gps_status ?? reading?.gpsStatus ?? 0
   const sats = reading?.sats ?? 0
-  const ts = reading?.timestamp ? format(new Date(reading.timestamp), 'HH:mm:ss') : '--'
+  const ts = safeFormatDate(reading?.timestamp, 'HH:mm:ss')
 
   return (
     <div style={{

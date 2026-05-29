@@ -1,6 +1,6 @@
 import React from 'react'
 import { Siren, MapPin, Copy, XCircle, CheckCircle } from '@phosphor-icons/react'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 import toast from 'react-hot-toast'
 
 export default function SOSOverlay({ activeSOS, onResolve, onClose }) {
@@ -9,7 +9,7 @@ export default function SOSOverlay({ activeSOS, onResolve, onClose }) {
   const lat = activeSOS.lat ?? 0
   const lng = activeSOS.lng ?? 0
   const accuracy = activeSOS.accuracy ?? 0
-  const ts = activeSOS.timestamp ? format(new Date(activeSOS.timestamp), 'HH:mm:ss') : '--'
+  const ts = safeFormatDate(activeSOS.timestamp, 'HH:mm:ss')
   const deviceId = activeSOS.deviceId ?? activeSOS.device_id ?? 'Unknown'
   const water = activeSOS.water ?? '--'
   const alertVal = activeSOS.alert ?? 'UNKNOWN'

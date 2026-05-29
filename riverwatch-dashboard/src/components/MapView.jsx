@@ -1,6 +1,6 @@
 import React from 'react'
 import { MapContainer, TileLayer, CircleMarker, Popup, Circle, useMap } from 'react-leaflet'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 
 const DEFAULT_CENTER = [5.6, 0.2]
 const DEFAULT_ZOOM = 13
@@ -32,7 +32,7 @@ export default function MapView({ reading, sosEvents = [], onResolveSOS }) {
   const lng = reading?.lng ?? 0
   const hasFix = gpsStatus === 2 && lat !== 0 && lng !== 0
   const color = alertColor(reading?.alert)
-  const ts = reading?.timestamp ? format(new Date(reading.timestamp), 'HH:mm:ss') : '--'
+  const ts = safeFormatDate(reading?.timestamp, 'HH:mm:ss')
 
   const activeSOS = sosEvents.find((e) => !e.resolved)
 

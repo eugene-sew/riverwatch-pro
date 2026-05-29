@@ -3,7 +3,7 @@ import {
   ResponsiveContainer, ComposedChart, Area, Line, XAxis, YAxis,
   CartesianGrid, Tooltip, ReferenceLine, Legend
 } from 'recharts'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 import { ChartLineUp } from '@phosphor-icons/react'
 
 const THRESHOLDS = [
@@ -15,7 +15,7 @@ const THRESHOLDS = [
 function CustomTooltip({ active, payload }) {
   if (active && payload && payload.length) {
     const data = payload[0].payload
-    const ts = data.timestamp ? format(new Date(data.timestamp), 'HH:mm:ss') : '--'
+    const ts = safeFormatDate(data.timestamp, 'HH:mm:ss')
     const water = data.water !== undefined ? `${data.water.toFixed(1)} cm` : '--'
     const riseRate = data.rise_rate ?? data.riseRate ?? 0
     return (
@@ -42,7 +42,7 @@ export default function ChartPanel({ history = [] }) {
     return [...history].reverse().map((r) => ({
       ...r,
       // Format timestamp for XAxis
-      timeStr: r.timestamp ? format(new Date(r.timestamp), 'mm:ss') : '--',
+      timeStr: safeFormatDate(r.timestamp, 'mm:ss'),
       rise_rate_field: r.rise_rate ?? r.riseRate ?? 0,
     }))
   }, [history])
@@ -53,8 +53,8 @@ export default function ChartPanel({ history = [] }) {
         <ChartLineUp weight="duotone" size={14} color="#00d4aa" />
         REAL-TIME HYDROGRAPH FEED
       </div>
-      <div style={{ width: '100%', height: 'calc(100% - 30px)' }}>
-        <ResponsiveContainer width="100%" height="100%">
+      <div style={{ width: '100%', height: '250px', minHeight: '250px' }}>
+        <ResponsiveContainer width="100%" height={240}>
           <ComposedChart
             data={chartData}
             margin={{ top: 10, right: 10, left: -20, bottom: 0 }}

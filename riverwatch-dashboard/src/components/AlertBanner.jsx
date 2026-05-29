@@ -1,6 +1,6 @@
 import React from 'react'
 import { getAlertStyle } from '../utils/alertColors'
-import { format } from 'date-fns'
+import { safeFormatDate } from '../utils/safeDate'
 
 export default function AlertBanner({ reading }) {
   const level = reading?.alert || 'SAFE'
@@ -9,7 +9,7 @@ export default function AlertBanner({ reading }) {
   const riseRate = reading?.riseRate ?? reading?.rise_rate ?? null
   const eta = reading?.eta ?? -1
   const risk = reading?.risk ?? '--'
-  const ts = reading?.timestamp ? format(new Date(reading.timestamp), 'HH:mm:ss') : '--'
+  const ts = safeFormatDate(reading?.timestamp, 'HH:mm:ss')
 
   return (
     <div
