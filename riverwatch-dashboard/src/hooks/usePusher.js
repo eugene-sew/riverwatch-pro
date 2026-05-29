@@ -4,15 +4,17 @@ import Pusher from 'pusher-js'
 const PUSHER_KEY = import.meta.env.VITE_PUSHER_KEY || ''
 const PUSHER_CLUSTER = import.meta.env.VITE_PUSHER_CLUSTER || 'mt1'
 
-export function usePusher({ onSOS, onAlert, onSOSResolved }) {
+export function usePusher({ onReading, onSOS, onAlert, onSOSResolved }) {
   const pusherRef = useRef(null)
   const channelRef = useRef(null)
   const [connected, setConnected] = useState(false)
 
+  const onReadingRef = useRef(onReading)
   const onSOSRef = useRef(onSOS)
   const onAlertRef = useRef(onAlert)
   const onSOSResolvedRef = useRef(onSOSResolved)
 
+  useEffect(() => { onReadingRef.current = onReading }, [onReading])
   useEffect(() => { onSOSRef.current = onSOS }, [onSOS])
   useEffect(() => { onAlertRef.current = onAlert }, [onAlert])
   useEffect(() => { onSOSResolvedRef.current = onSOSResolved }, [onSOSResolved])
@@ -32,6 +34,11 @@ export function usePusher({ onSOS, onAlert, onSOSResolved }) {
 
     const channel = pusher.subscribe('riverwatch')
     channelRef.current = channel
+
+    channel.bind('reading', (data) => {
+      console.log('[Pusher] Reading received:', data)
+      onReadingRef.current?.(data)
+    })
 
     channel.bind('sos', (data) => {
       console.log('[Pusher] SOS received:', data)

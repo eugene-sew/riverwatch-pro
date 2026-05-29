@@ -31,8 +31,14 @@ export function useHistory(connected) {
     if (connected) return // WebSocket handles this
     try {
       const res = await axios.get(`${BACKEND_URL}/api/latest`, { timeout: 3000 })
-      // Parent will handle via latestReading from socket; here just track online status
       setBackendOnline(true)
+      if (res.data && res.data.reading) {
+        const r = res.data.reading
+        setHistory((prev) => {
+          if (prev.length > 0 && prev[0].timestamp === r.timestamp) return prev
+          return [r, ...prev].slice(0, 100)
+        })
+      }
     } catch {
       setBackendOnline(false)
     }

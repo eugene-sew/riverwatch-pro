@@ -25,9 +25,21 @@ export default function App() {
   const [sosEvents, setSosEvents] = useState([])
   const [activeSOSEvent, setActiveSOSEvent] = useState(null)
   const [isStale, setIsStale] = useState(false)
+  const [pusherReading, setPusherReading] = useState(null)
+  const [pusherAlertLog, setPusherAlertLog] = useState([])
 
-  const { latestReading, alertLog, connected } = useSocket()
-  const { history, historyAlerts, loading, backendOnline } = useHistory(connected)
+  const { latestReading: socketReading, alertLog: socketAlertLog, connected: socketConnected } = useSocket()
+  const { history, historyAlerts, loading, backendOnline } = useHistory(socketConnected)
+
+  // Merge Socket.IO reading and Pusher reading, taking the newest
+  const latestReading = useMemo(() => {
+    if (!socketReading && !pusherReading) return null
+    if (!socketReading) return pusherReading
+    if (!pusherReading) return socketReading
+    const tSocket = new Date(socketReading.timestamp || 0).getTime()
+    const tPusher = new Date(pusherReading.timestamp || 0).getTime()
+    return tSocket >= tPusher ? socketReading : pusherReading
+  }, [socketReading, pusherReading])
 
   const reading = latestReading || (history.length > 0 ? history[0] : null)
 
@@ -47,7 +59,11 @@ export default function App() {
   }, [])
 
   // Pusher Real-Time Events Bindings
-  usePusher({
+  const { pusherConnected } = usePusher({
+    onReading: (data) => {
+      console.log('[App] New reading via Pusher:', data)
+      setPusherReading(data)
+    },
     onSOS: (data) => {
       // Add to list if not exists
       setSosEvents((prev) => {
@@ -74,6 +90,7 @@ export default function App() {
     },
     onAlert: (data) => {
       playAlertTone()
+      setPusherAlertLog((prev) => [data, ...prev].slice(0, 50))
       toast.error(`⚠️ STATION ALERT INCOMING: [${data.level}]`, {
         duration: 5000,
         position: 'top-center',
@@ -102,6 +119,8 @@ export default function App() {
       })
     }
   })
+
+  const connected = socketConnected || pusherConnected
 
   // Staleness Monitor (Flags data as stale if > 15s since last update)
   useEffect(() => {
@@ -160,9 +179,9 @@ export default function App() {
     return [latestReading, ...history].slice(0, 100)
   }, [latestReading, history])
 
-  // Merge alert logs (SocketIO + REST alerts, deduped by timestamp)
+  // Merge alert logs (SocketIO + REST alerts + Pusher alerts, deduped by timestamp)
   const mergedAlerts = useMemo(() => {
-    const all = [...alertLog, ...historyAlerts]
+    const all = [...socketAlertLog, ...pusherAlertLog, ...historyAlerts]
     const seen = new Set()
     return all.filter((a) => {
       const key = (a.timestamp || '') + (a.level || a.alert || '')
@@ -170,7 +189,7 @@ export default function App() {
       seen.add(key)
       return true
     }).slice(0, 50)
-  }, [alertLog, historyAlerts])
+  }, [socketAlertLog, pusherAlertLog, historyAlerts])
 
   if (booting) {
     return <BootScreen onDone={() => setBooting(false)} />
