@@ -159,6 +159,7 @@ html, body {
   padding: 8px 8px 0;
   overflow: hidden;
   min-height: 0;
+  height: 100%;
 }
 
 .sensors-row {
@@ -168,12 +169,14 @@ html, body {
   gap: 8px;
   padding: 8px;
   min-height: 0;
+  height: 100%;
 }
 
 .chart-row {
   grid-area: chart;
   padding: 0 8px 8px;
   min-height: 0;
+  height: 100%;
 }
 
 .bottom-row {
@@ -183,6 +186,7 @@ html, body {
   gap: 8px;
   padding: 0 8px 8px;
   min-height: 0;
+  height: 100%;
 }
 
 /* ============================================================
